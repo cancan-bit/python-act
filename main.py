@@ -1,1 +1,8 @@
-print('Hello world')
+from tkinter import *
+from tkinter import ttk
+
+root = Tk()
+
+root.title('First GUI')
+ttk.Button(root, text='Hello world').grid()
+root.mainloop()
