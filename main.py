@@ -1,8 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import mysql.connector as s
-
-
+from dbcm import UseDatabase
 
 root = Tk()
 
