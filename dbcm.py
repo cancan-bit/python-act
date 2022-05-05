@@ -6,7 +6,7 @@ class UseDatabase():
         self.config = config
 
     def __enter__(self):
-        self.conn = s.connect(**config)
+        self.conn = s.connect(**self.config)
         self.cur = self.conn.cursor()
         return self.cur
 

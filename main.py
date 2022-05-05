@@ -1,15 +1,24 @@
+from dataclasses import dataclass
 from tkinter import *
 from tkinter import ttk
 import mysql.connector as s
 from dbcm import UseDatabase
+from datetime import datetime
 
 root = Tk()
 
 class App():
 
     def __init__(self,root):
+
+        self.dbconfig = {'host':'localhost',
+                         'user':'pythonact1',
+                         'passwd':'python123',
+                         'database': 'shop_info',
+                         'port':3308}
         self.root = root
         self.i = 0
+        self.data = []
         self.root.minsize(800,400)
 
         self.inputs = Frame(self.root)
@@ -17,7 +26,7 @@ class App():
         self.root.columnconfigure(0,weight=20)
         self.root.columnconfigure(1,weight=1)
 
-        Label(self.root, text='Welcome to the cashier app').grid(row=0,column=0)
+        Label(self.root, text='Welcome to the cashier app', font='Helvetica 18 bold').grid(row=0,column=0,pady=10)
 
         self.inputs.columnconfigure(0,weight=1)
         self.inputs.columnconfigure(1,weight=10)
@@ -33,28 +42,61 @@ class App():
         Label(self.inputs,text='Price').grid(row=0,column=3,sticky='EW')
         Label(self.inputs,text='Cost').grid(row=0,column=4,sticky='EW')
 
+        with UseDatabase(self.dbconfig) as cur:
+            sql = 'select * from {}'.format('shop_prices')
+            cur.execute(sql)
+            self.data = cur.fetchall()
+
         self.button_create()
         self.row_create()
         
+    def display(self,event=None):
+        
+        r_count = 1
+        c_count = 0
+        self.info = Toplevel(self.root)
+        self.info.title('Prices')
+        self.info.geometry('300x300')
+        
+        Label(self.info,text='Item no.',font='Helvetica 18 bold').grid(row=0,column=0,sticky='ew')
+        Label(self.info,text='Item',font='Helvetica 18 bold').grid(row=0,column=1,sticky='ew')
+        Label(self.info,text='Price',font='Helvetica 18 bold').grid(row=0,column=2,sticky='ew')
 
+        for row in self.data:
+            for val in row:
+                Label(self.info,text=val,font='Helvetica 15').grid(row=r_count,column=c_count,sticky='ew')
+                c_count += 1
+            r_count+=1
+            c_count=0
+               
+            
     def row_create(self,event=None):
 
-        self.itemno = Entry(self.inputs).grid(row=self.i+1, column=0,sticky='WE' )
-        self.item = Entry(self.inputs,state='disabled').grid(row=self.i+1, column=1,sticky='WE' )
+        self.itemno = Entry(self.inputs)
+        self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
+        self.item = Entry(self.inputs,state='disabled')
+        self.item.grid(row=self.i+1, column=1,sticky='WE' )
         self.qty = Entry(self.inputs).grid(row=self.i+1, column=2,sticky='WE')
-        self.price = Entry(self.inputs,state='disabled').grid(row=self.i+1, column=3,sticky='WE')
-        self.cost = Entry(self.inputs,state='disabled').grid(row=self.i+1,column=4,sticky='WE')
+        self.price = Entry(self.inputs,state='disabled')
+        self.price.grid(row=self.i+1, column=3,sticky='WE')
+        self.cost = Entry(self.inputs,state='disabled')
+        self.cost.grid(row=self.i+1,column=4,sticky='WE')
 
         self.enter.destroy()
         self.next.destroy()
         self.end.destroy()
+        self.totalVal.destroy()
+        self.total.destroy()
+        self.disp_price.destroy()
 
         self.button_create()
 
         self.i += 1
 
     def save(self,event=None):
-        pass
+        with UseDatabase(self.dbconfig) as cur:
+            cur.execute('show tables;')
+            print(cur.fetchall())
 
     def quit(self,event=None):
         self.root.destroy()
@@ -69,9 +111,18 @@ class App():
         self.next.bind('<Button-1>',self.row_create)
         self.next.grid(row=self.i+3, column=2,pady=10)
 
-        self.end = Button(self.inputs, text='Quit')
+        self.disp_price = Button(self.inputs, text='Prices')
+        self.disp_price.bind('<Button-1>',self.display)
+        self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
+
+        self.totalVal = Label(self.inputs,text='Total')
+        self.totalVal.grid(row=self.i+4,column=0,sticky='W')
+        self.total = Entry(self.inputs,state='disabled')
+        self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
+
+        self.end = Button(self.inputs,text='Quit' )
+        self.end.grid(row=self.i+5,column=2,pady=10)
         self.end.bind('<Button-1>',self.quit)
-        self.end.grid(row=self.i+3, column=4, sticky='e',pady=10)
 
 
 App(root)
