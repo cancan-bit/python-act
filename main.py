@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from tkinter import *
 from tkinter import ttk
 import mysql.connector as s
@@ -11,6 +10,13 @@ class App():
 
     def __init__(self,root):
 
+        self.itemno_var =[]
+        self.item_var =[]
+        self.price_var =[]
+        self.qty_var =[]
+        self.cost_var =[]
+        self.total_val = DoubleVar()
+
         self.dbconfig = {'host':'localhost',
                          'user':'pythonact1',
                          'passwd':'python123',
@@ -19,6 +25,8 @@ class App():
         self.root = root
         self.i = 0
         self.data = []
+        self.item_dict = dict()
+        self.prices_dict = dict()
         self.root.minsize(800,400)
 
         self.inputs = Frame(self.root)
@@ -47,9 +55,87 @@ class App():
             cur.execute(sql)
             self.data = cur.fetchall()
 
+        for i in self.data:
+            self.item_dict[i[0]] = i[1]
+            self.prices_dict[i[0]] = i[2]
+
         self.button_create()
-        self.row_create()
+        self.row_create(first=True)
+
+    
+    def row_create(self,event=None,first=False):            
+        self.itemno_var.append(IntVar())
+        self.item_var.append(StringVar())
+        self.qty_var.append(IntVar())
+        self.price_var.append(DoubleVar())
+        self.cost_var.append(DoubleVar())
+
+        if first == False:
+            item_name = self.item_dict[self.itemno_var[self.i-1].get()]
+            self.item_var[self.i-1].set(item_name)
+
+            item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
+            self.price_var[self.i-1].set(item_price)
+
+            item_cost = item_price * int(self.qty.get())
+            self.cost_var[self.i-1].set(item_cost)
+
+            sum = self.total_val.get() + item_cost
+            self.total_val.set(sum)
+
+        self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
+        self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
+        self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
+        self.item.grid(row=self.i+1, column=1,sticky='WE' )
+        self.qty = Entry(self.inputs,textvariable=self.qty_var[self.i])
+        self.qty.grid(row=self.i+1, column=2,sticky='WE')
+        self.price = Entry(self.inputs,state='readonly',textvariable=self.price_var[self.i])
+        self.price.grid(row=self.i+1, column=3,sticky='WE')
+        self.cost = Entry(self.inputs,state='readonly',textvariable=self.cost_var[self.i])
+        self.cost.grid(row=self.i+1,column=4,sticky='WE')
+
+        self.enter.destroy()
+        self.next.destroy()
+        self.end.destroy()
+        self.total_label.destroy()
+        self.total.destroy()
+        self.disp_price.destroy()
+
+        self.button_create()
+
+        self.i += 1
+
         
+    def button_create(self,event=None):
+        
+        self.enter = Button(self.inputs, text='Save')
+        self.enter.bind('<Button-1>',self.save)
+        self.enter.grid(row=self.i+3, column=0, sticky='w',pady=10)
+
+        self.next = Button(self.inputs, text='Add')
+        self.next.bind('<Button-1>',self.row_create)
+        self.next.grid(row=self.i+3, column=2,pady=10)
+
+        self.disp_price = Button(self.inputs, text='Prices')
+        self.disp_price.bind('<Button-1>',self.display)
+        self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
+
+        self.total_label = Label(self.inputs,text='Total')
+        self.total_label.grid(row=self.i+4,column=0,sticky='W')
+        self.total = Entry(self.inputs,state='readonly',textvariable=self.total_val)
+        self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
+
+        self.end = Button(self.inputs,text='Quit' )
+        self.end.grid(row=self.i+5,column=2,pady=10)
+        self.end.bind('<Button-1>',self.quit)
+
+    def save(self,event=None):
+        with UseDatabase(self.dbconfig) as cur:
+            pass
+
+    def quit(self,event=None):
+        self.root.destroy()
+
     def display(self,event=None):
         
         r_count = 1
@@ -69,61 +155,7 @@ class App():
             r_count+=1
             c_count=0
                
-            
-    def row_create(self,event=None):
-
-        self.itemno = Entry(self.inputs)
-        self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
-        self.item = Entry(self.inputs,state='disabled')
-        self.item.grid(row=self.i+1, column=1,sticky='WE' )
-        self.qty = Entry(self.inputs).grid(row=self.i+1, column=2,sticky='WE')
-        self.price = Entry(self.inputs,state='disabled')
-        self.price.grid(row=self.i+1, column=3,sticky='WE')
-        self.cost = Entry(self.inputs,state='disabled')
-        self.cost.grid(row=self.i+1,column=4,sticky='WE')
-
-        self.enter.destroy()
-        self.next.destroy()
-        self.end.destroy()
-        self.totalVal.destroy()
-        self.total.destroy()
-        self.disp_price.destroy()
-
-        self.button_create()
-
-        self.i += 1
-
-    def save(self,event=None):
-        with UseDatabase(self.dbconfig) as cur:
-            cur.execute('show tables;')
-            print(cur.fetchall())
-
-    def quit(self,event=None):
-        self.root.destroy()
-
-    def button_create(self,event=None):
-        
-        self.enter = Button(self.inputs, text='Save')
-        self.enter.bind('<Button-1>',self.save)
-        self.enter.grid(row=self.i+3, column=0, sticky='w',pady=10)
-
-        self.next = Button(self.inputs, text='Add')
-        self.next.bind('<Button-1>',self.row_create)
-        self.next.grid(row=self.i+3, column=2,pady=10)
-
-        self.disp_price = Button(self.inputs, text='Prices')
-        self.disp_price.bind('<Button-1>',self.display)
-        self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
-
-        self.totalVal = Label(self.inputs,text='Total')
-        self.totalVal.grid(row=self.i+4,column=0,sticky='W')
-        self.total = Entry(self.inputs,state='disabled')
-        self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
-
-        self.end = Button(self.inputs,text='Quit' )
-        self.end.grid(row=self.i+5,column=2,pady=10)
-        self.end.bind('<Button-1>',self.quit)
-
+    
 
 App(root)
 root.mainloop()
