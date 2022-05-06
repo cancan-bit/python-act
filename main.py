@@ -15,6 +15,7 @@ class App():
         self.price_var =[]
         self.qty_var =[]
         self.cost_var =[]
+        self.total_val = DoubleVar()
 
         self.dbconfig = {'host':'localhost',
                          'user':'pythonact1',
@@ -79,6 +80,9 @@ class App():
             item_cost = item_price * int(self.qty.get())
             self.cost_var[self.i-1].set(item_cost)
 
+            sum = self.total_val.get() + item_cost
+            self.total_val.set(sum)
+
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
         self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
@@ -93,7 +97,7 @@ class App():
         self.enter.destroy()
         self.next.destroy()
         self.end.destroy()
-        self.totalVal.destroy()
+        self.total_label.destroy()
         self.total.destroy()
         self.disp_price.destroy()
 
@@ -116,9 +120,9 @@ class App():
         self.disp_price.bind('<Button-1>',self.display)
         self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
 
-        self.totalVal = Label(self.inputs,text='Total')
-        self.totalVal.grid(row=self.i+4,column=0,sticky='W')
-        self.total = Entry(self.inputs,state='disabled')
+        self.total_label = Label(self.inputs,text='Total')
+        self.total_label.grid(row=self.i+4,column=0,sticky='W')
+        self.total = Entry(self.inputs,state='readonly',textvariable=self.total_val)
         self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
 
         self.end = Button(self.inputs,text='Quit' )
@@ -126,7 +130,8 @@ class App():
         self.end.bind('<Button-1>',self.quit)
 
     def save(self,event=None):
-        pass
+        with UseDatabase(self.dbconfig) as cur:
+            pass
 
     def quit(self,event=None):
         self.root.destroy()
