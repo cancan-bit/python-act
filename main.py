@@ -59,16 +59,25 @@ class App():
             self.prices_dict[i[0]] = i[2]
 
         self.button_create()
-        self.row_create()
-          
-    def row_create(self,event=None):
+        self.row_create(first=True)
 
+    
+    def row_create(self,event=None,first=False):            
         self.itemno_var.append(IntVar())
         self.item_var.append(StringVar())
         self.qty_var.append(IntVar())
         self.price_var.append(DoubleVar())
         self.cost_var.append(DoubleVar())
-        print(self.itemno_var[0])
+
+        if first == False:
+            item_name = self.item_dict[self.itemno_var[self.i-1].get()]
+            self.item_var[self.i-1].set(item_name)
+
+            item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
+            self.price_var[self.i-1].set(item_price)
+
+            item_cost = item_price * int(self.qty.get())
+            self.cost_var[self.i-1].set(item_cost)
 
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
@@ -92,17 +101,6 @@ class App():
 
         self.i += 1
 
-    def fetch_val(self,event=None):
-
-        item_name = self.item_dict[self.itemno_var[self.i-1].get()]
-        self.item_var[self.i-1].set(item_name)
-
-        item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
-        self.price_var[self.i-1].set(item_price)
-
-        item_cost = item_price * int(self.qty.get())
-        self.cost_var[self.i-1].set(item_cost)
-
         
     def button_create(self,event=None):
         
@@ -111,7 +109,7 @@ class App():
         self.enter.grid(row=self.i+3, column=0, sticky='w',pady=10)
 
         self.next = Button(self.inputs, text='Add')
-        self.next.bind('<Button-1>',self.fetch_val)
+        self.next.bind('<Button-1>',self.row_create)
         self.next.grid(row=self.i+3, column=2,pady=10)
 
         self.disp_price = Button(self.inputs, text='Prices')
