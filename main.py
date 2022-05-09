@@ -93,12 +93,6 @@ class App():
 
             push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
             self.purchase_data.append(push_info)
-
-            time = datetime.now()
-            push_time = time.strftime('%Y-%m-%d %H:%M:%S')
-
-            push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
-            self.purchase_data.append(push_info)
         
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
