@@ -63,7 +63,22 @@ class App():
 
         self.button_create()
         self.row_create(first=True)
+
         
+    def fetch_item(self,event):
+        item_name = self.item_dict[self.itemno_var[self.i-1].get()]
+        self.item_var[self.i-1].set(item_name)
+
+        item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
+        self.price_var[self.i-1].set(item_price)
+
+    def fetch_cost(self,event):
+        item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
+        self.cost_var[self.i-1].set(item_cost)
+
+        sum = self.total_val.get() + item_cost
+        self.total_val.set(sum)
+
     def row_create(self,event=None,first=False):   
 
         self.itemno_var.append(IntVar())
@@ -73,18 +88,6 @@ class App():
         self.cost_var.append(DoubleVar())
 
         if not first:
-            item_name = self.item_dict[self.itemno_var[self.i-1].get()]
-            self.item_var[self.i-1].set(item_name)
-
-            item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
-            self.price_var[self.i-1].set(item_price)
-
-            item_cost = item_price * int(self.qty.get())
-            self.cost_var[self.i-1].set(item_cost)
-
-            sum = self.total_val.get() + item_cost
-            self.total_val.set(sum)
-
             time = datetime.now()
             push_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -93,10 +96,12 @@ class App():
 
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
-        self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
-        self.item.grid(row=self.i+1, column=1,sticky='WE' )
+        self.itemno.bind('<FocusOut>',self.fetch_item)
         self.qty = Entry(self.inputs,textvariable=self.qty_var[self.i])
         self.qty.grid(row=self.i+1, column=2,sticky='WE')
+        self.qty.bind('<Tab>',self.fetch_cost)
+        self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
+        self.item.grid(row=self.i+1, column=1,sticky='WE' )
         self.price = Entry(self.inputs,state='readonly',textvariable=self.price_var[self.i])
         self.price.grid(row=self.i+1, column=3,sticky='WE')
         self.cost = Entry(self.inputs,state='readonly',textvariable=self.cost_var[self.i])
