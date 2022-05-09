@@ -25,6 +25,7 @@ class App():
         self.root = root
         self.i = 0
         self.data = []
+        self.purchase_data = []
         self.item_dict = dict()
         self.prices_dict = dict()
         self.root.minsize(800,400)
@@ -61,16 +62,18 @@ class App():
 
         self.button_create()
         self.row_create(first=True)
+        
 
     
-    def row_create(self,event=None,first=False):            
+    def row_create(self,event=None,first=False):   
+
         self.itemno_var.append(IntVar())
         self.item_var.append(StringVar())
         self.qty_var.append(IntVar())
         self.price_var.append(DoubleVar())
         self.cost_var.append(DoubleVar())
 
-        if first == False:
+        if not first:
             item_name = self.item_dict[self.itemno_var[self.i-1].get()]
             self.item_var[self.i-1].set(item_name)
 
@@ -82,6 +85,12 @@ class App():
 
             sum = self.total_val.get() + item_cost
             self.total_val.set(sum)
+
+            time = datetime.now()
+            push_time = time.strftime('%Y-%m-%d %H:%M:%S')
+
+            push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
+            self.purchase_data.append(push_info)
 
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
@@ -130,8 +139,24 @@ class App():
         self.end.bind('<Button-1>',self.quit)
 
     def save(self,event=None):
-        with UseDatabase(self.dbconfig) as cur:
-            pass
+        if self.purchase_data:
+            with UseDatabase(self.dbconfig) as cur:
+                cur.execute('select max(bill_no) from shop_purchases;')
+                bill_no = cur.fetchall()[0][0]
+                print(bill_no)
+                if bill_no:
+                    bill_no += 1
+                else:
+                    bill_no = 1
+                for row in self.purchase_data:
+                    sql = ''' insert into shop_purchases values
+                        ({},{},'{}',{},{},{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5])
+                    cur.execute(sql)
+            self.purchase_data = list()
+        else:
+            raise ValueError
+        
+        
 
     def quit(self,event=None):
         self.root.destroy()
