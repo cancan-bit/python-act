@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import mysql.connector as s
 from dbcm import UseDatabase
 from datetime import datetime
@@ -63,8 +64,6 @@ class App():
         self.button_create()
         self.row_create(first=True)
         
-
-    
     def row_create(self,event=None,first=False):   
 
         self.itemno_var.append(IntVar())
@@ -153,16 +152,11 @@ class App():
                         ({},{},'{}',{},{},{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5])
                     cur.execute(sql)
             self.purchase_data = list()
+            self.__init__(self.root)
         else:
-            raise ValueError
+            messagebox.showwarning('Null value','Please enter some values')
         
-        
-
-    def quit(self,event=None):
-        self.root.destroy()
-
     def display(self,event=None):
-        
         r_count = 1
         c_count = 0
         self.info = Toplevel(self.root)
@@ -179,8 +173,9 @@ class App():
                 c_count += 1
             r_count+=1
             c_count=0
-               
-    
 
+    def quit(self,event=None):
+        self.root.destroy()
+               
 App(root)
 root.mainloop()
