@@ -26,7 +26,10 @@ class App():
         self.root = root
         self.i = 0
         self.data = []
+<<<<<<< HEAD
         self.purchase_data = []
+=======
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
         self.item_dict = dict()
         self.prices_dict = dict()
         self.root.minsize(800,400)
@@ -63,16 +66,26 @@ class App():
 
         self.button_create()
         self.row_create(first=True)
+<<<<<<< HEAD
         
     def row_create(self,event=None,first=False):   
 
+=======
+
+    
+    def row_create(self,event=None,first=False):            
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
         self.itemno_var.append(IntVar())
         self.item_var.append(StringVar())
         self.qty_var.append(IntVar())
         self.price_var.append(DoubleVar())
         self.cost_var.append(DoubleVar())
 
+<<<<<<< HEAD
         if not first:
+=======
+        if first == False:
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
             item_name = self.item_dict[self.itemno_var[self.i-1].get()]
             self.item_var[self.i-1].set(item_name)
 
@@ -85,12 +98,15 @@ class App():
             sum = self.total_val.get() + item_cost
             self.total_val.set(sum)
 
+<<<<<<< HEAD
             time = datetime.now()
             push_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
             push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
             self.purchase_data.append(push_info)
 
+=======
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
         self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
@@ -138,6 +154,7 @@ class App():
         self.end.bind('<Button-1>',self.quit)
 
     def save(self,event=None):
+<<<<<<< HEAD
         if self.purchase_data:
             with UseDatabase(self.dbconfig) as cur:
                 cur.execute('select max(bill_no) from shop_purchases;')
@@ -157,6 +174,16 @@ class App():
             messagebox.showwarning('Null value','Please enter some values')
         
     def display(self,event=None):
+=======
+        with UseDatabase(self.dbconfig) as cur:
+            pass
+
+    def quit(self,event=None):
+        self.root.destroy()
+
+    def display(self,event=None):
+        
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
         r_count = 1
         c_count = 0
         self.info = Toplevel(self.root)
@@ -173,6 +200,11 @@ class App():
                 c_count += 1
             r_count+=1
             c_count=0
+<<<<<<< HEAD
+=======
+               
+    
+>>>>>>> 8f15f6aa3f363d10ad9aa18677da6c6327065962
 
     def quit(self,event=None):
         self.root.destroy()
