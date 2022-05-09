@@ -26,6 +26,7 @@ class App():
         self.root = root
         self.i = 0
         self.data = []
+
         self.purchase_data = []
         self.item_dict = dict()
         self.prices_dict = dict()
@@ -63,9 +64,9 @@ class App():
 
         self.button_create()
         self.row_create(first=True)
+
         
     def row_create(self,event=None,first=False):   
-
         self.itemno_var.append(IntVar())
         self.item_var.append(StringVar())
         self.qty_var.append(IntVar())
@@ -73,6 +74,7 @@ class App():
         self.cost_var.append(DoubleVar())
 
         if not first:
+
             item_name = self.item_dict[self.itemno_var[self.i-1].get()]
             self.item_var[self.i-1].set(item_name)
 
@@ -90,7 +92,7 @@ class App():
 
             push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
             self.purchase_data.append(push_info)
-
+        
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
         self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
@@ -173,7 +175,6 @@ class App():
                 c_count += 1
             r_count+=1
             c_count=0
-
     def quit(self,event=None):
         self.root.destroy()
                
