@@ -26,6 +26,7 @@ class App():
         self.root = root
         self.i = 0
         self.data = []
+
         self.purchase_data = []
         self.item_dict = dict()
         self.prices_dict = dict()
@@ -64,7 +65,6 @@ class App():
         self.button_create()
         self.row_create(first=True)
 
-        
     def fetch_item(self,event):
         item_name = self.item_dict[self.itemno_var[self.i-1].get()]
         self.item_var[self.i-1].set(item_name)
@@ -94,6 +94,12 @@ class App():
             push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
             self.purchase_data.append(push_info)
 
+            time = datetime.now()
+            push_time = time.strftime('%Y-%m-%d %H:%M:%S')
+
+            push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
+            self.purchase_data.append(push_info)
+        
         self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
         self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
         self.itemno.bind('<FocusOut>',self.fetch_item)
