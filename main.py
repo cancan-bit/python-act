@@ -66,18 +66,26 @@ class App():
         self.row_create(first=True)
 
     def fetch_item(self,event):
-        item_name = self.item_dict[self.itemno_var[self.i-1].get()]
-        self.item_var[self.i-1].set(item_name)
+        try:
+            item_name = self.item_dict[self.itemno_var[self.i-1].get()]
+            self.item_var[self.i-1].set(item_name)
 
-        item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
-        self.price_var[self.i-1].set(item_price)
+            item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
+            self.price_var[self.i-1].set(item_price)
+        except:
+            messagebox.showerror('Error!','Invalid item number.')
+            self.itemno_var[self.i-1].set(0)
 
     def fetch_cost(self,event):
-        item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
-        self.cost_var[self.i-1].set(item_cost)
+        if int(self.qty.get()) > 0:
+            item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
+            self.cost_var[self.i-1].set(item_cost)
 
-        sum = self.total_val.get() + item_cost
-        self.total_val.set(sum)
+            sum = self.total_val.get() + item_cost
+            self.total_val.set(sum)
+        else:
+            messagebox.showerror('Error!','Invalid value for qty.')
+            self.qty_var[self.i-1].set(0)
 
     def row_create(self,event=None,first=False):   
 
