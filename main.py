@@ -19,9 +19,9 @@ class App():
         self.total_val = DoubleVar()
 
         self.dbconfig = {'host':'localhost',
-                         'user':'pythonact1',
-                         'passwd':'python123',
-                         'database': 'shop_info',
+                         'user':'root',
+                         'passwd':'',
+                         'database':'12c', # <- check if database is correct
                          'port':3308}
         self.root = root
         self.i = 0
@@ -54,6 +54,23 @@ class App():
         Label(self.inputs,text='Cost').grid(row=0,column=4,sticky='EW')
 
         with UseDatabase(self.dbconfig) as cur:
+            sql = '''create table if not exists shop_prices(
+                    itemno int primary key,
+                    item_name varchar(30),
+                    price float(10,2));
+                    '''
+            cur.execute(sql)
+
+            sql = '''insert into table shop_prices values
+                      (1,'Soap',300),
+                      (2,'Detergent',250),
+                      (3, 'Shampoo',340),
+                      (4,'Face cream',460),
+                      (5,'Perfume',550);
+                   '''
+            cur.execute(sql)
+
+        with UseDatabase(self.dbconfig) as cur:
             sql = 'select * from {}'.format('shop_prices')
             cur.execute(sql)
             self.data = cur.fetchall()
@@ -77,15 +94,18 @@ class App():
             self.itemno_var[self.i-1].set(0)
 
     def fetch_cost(self,event):
-        if int(self.qty.get()) > 0:
-            item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
-            self.cost_var[self.i-1].set(item_cost)
+        try:
+            if int(self.qty.get()) > 0:
+                item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
+                self.cost_var[self.i-1].set(item_cost)
 
-            sum = self.total_val.get() + item_cost
-            self.total_val.set(sum)
-        else:
+                sum = self.total_val.get() + item_cost
+                self.total_val.set(sum)
+            else:
+                messagebox.showerror('Error!','Invalid value for qty.')
+                self.qty_var[self.i-1].set(0)
+        except:
             messagebox.showerror('Error!','Invalid value for qty.')
-            self.qty_var[self.i-1].set(0)
 
     def row_create(self,event=None,first=False):   
 
@@ -155,7 +175,6 @@ class App():
             with UseDatabase(self.dbconfig) as cur:
                 cur.execute('select max(bill_no) from shop_purchases;')
                 bill_no = cur.fetchall()[0][0]
-                print(bill_no)
                 if bill_no:
                     bill_no += 1
                 else:
