@@ -15,12 +15,22 @@ class App():
         self.price_var =[]
         self.qty_var =[]
         self.cost_var =[]
+
+        self.itemno =[]
+        self.item =[]
+        self.price =[]
+        self.qty=[]
+        self.cost =[]
+
         self.total_val = DoubleVar()
+
+
  
         self.dbconfig = {'host':'localhost',
-                         'user':'root',
-                         'passwd':'admin',
-                         'database':'12c', # <- check if database is correct
+                         'user':'pythonact1',
+                         'passwd':'python123',
+                         'database': 'shop_info',
+                         'port': 3308
         }
         self.root = root
         self.i = 0
@@ -81,6 +91,14 @@ class App():
                         time datetime
                         ) '''
             cur.execute(sql)
+
+            sql = '''create table if not exists customer_info(
+                phone_no int,
+                customer_no varchar(30),
+                points int
+            );
+            '''
+            cur.execute(sql)
  
         with UseDatabase(self.dbconfig) as cur:
             sql = 'select * from {}'.format('shop_prices')
@@ -96,6 +114,7 @@ class App():
  
     def fetch_item(self,event):
         try:
+            call = event.widget 
             item_name = self.item_dict[self.itemno_var[self.i-1].get()]
             self.item_var[self.i-1].set(item_name)
  
@@ -107,16 +126,22 @@ class App():
  
     def fetch_cost(self,event):
         try:
-            if int(self.qty.get()) > 0:
-                item_cost = float(self.price_var[self.i-1].get()) * int(self.qty.get())
+            if int(self.qty[self.i].get()) >= 0:
+                item_cost = float(self.price_var[self.i-1].get()) * int(self.qty[self.i].get())
                 self.cost_var[self.i-1].set(item_cost)
- 
-                sum = self.total_val.get() + item_cost
-                self.total_val.set(sum)
+                print('check')
+                self.total_val.set(0)
+                for i in self.cost_var:
+                    val = self.total_val.get()
+                    dat = i.get()
+
+                    self.total_val.set(val+dat)
+
             else:
                 messagebox.showerror('Error!','Invalid value for qty.')
                 self.qty_var[self.i-1].set(0)
-        except:
+        except Exception as e:
+            print(e)
             messagebox.showerror('Error!','Invalid value for qty.')
  
     def row_create(self,event=None,first=False):   
@@ -126,26 +151,32 @@ class App():
         self.qty_var.append(IntVar())
         self.price_var.append(DoubleVar())
         self.cost_var.append(DoubleVar())
- 
-        if not first:
+        
+        self.itemno.append(None)
+        self.item.append(None)
+        self.qty.append(None)
+        self.price.append(None)
+        self.cost.append(None)
+
+        '''if not first:
             time = datetime.now()
             push_time = time.strftime('%Y-%m-%d %H:%M:%S')
  
             push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
-            self.purchase_data.append(push_info)
+            self.purchase_data.append(push_info)'''
  
-        self.itemno = Entry(self.inputs,textvariable=self.itemno_var[self.i])
-        self.itemno.grid(row=self.i+1, column=0,sticky='WE' )
-        self.itemno.bind('<FocusOut>',self.fetch_item)
-        self.qty = Entry(self.inputs,textvariable=self.qty_var[self.i])
-        self.qty.grid(row=self.i+1, column=2,sticky='WE')
-        self.qty.bind('<FocusOut>',self.fetch_cost)
-        self.item = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
-        self.item.grid(row=self.i+1, column=1,sticky='WE' )
-        self.price = Entry(self.inputs,state='readonly',textvariable=self.price_var[self.i])
-        self.price.grid(row=self.i+1, column=3,sticky='WE')
-        self.cost = Entry(self.inputs,state='readonly',textvariable=self.cost_var[self.i])
-        self.cost.grid(row=self.i+1,column=4,sticky='WE')
+        self.itemno[self.i] = Entry(self.inputs,textvariable=self.itemno_var[self.i])
+        self.itemno[self.i].grid(row=self.i+1, column=0,sticky='WE' )
+        self.itemno[self.i].bind('<Tab>',self.fetch_item)
+        self.qty[self.i] = Entry(self.inputs,textvariable=self.qty_var[self.i])
+        self.qty[self.i].grid(row=self.i+1, column=2,sticky='WE')
+        self.qty[self.i].bind('<Tab>',self.fetch_cost)
+        self.item[self.i] = Entry(self.inputs,state='readonly',textvariable=self.item_var[self.i])
+        self.item[self.i].grid(row=self.i+1, column=1,sticky='WE' )
+        self.price[self.i] = Entry(self.inputs,state='readonly',textvariable=self.price_var[self.i])
+        self.price[self.i].grid(row=self.i+1, column=3,sticky='WE')
+        self.cost[self.i] = Entry(self.inputs,state='readonly',textvariable=self.cost_var[self.i])
+        self.cost[self.i].grid(row=self.i+1,column=4,sticky='WE')
  
         self.enter.destroy()
         self.next.destroy()
