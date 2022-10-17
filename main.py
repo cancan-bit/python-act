@@ -110,26 +110,32 @@ class App():
             self.prices_dict[i[0]] = i[2]
  
         self.button_create()
-        self.row_create(first=True)
+        self.row_create()
  
     def fetch_item(self,event):
-        try:
-            call = event.widget 
-            item_name = self.item_dict[self.itemno_var[self.i-1].get()]
-            self.item_var[self.i-1].set(item_name)
+        s = str(event.widget)[14:]   #.!frame.!entry(no)
+        print(event.widget)
+        pos = int(s)//6
+        print(pos)
+        try: 
+            item_name = self.item_dict[self.itemno_var[pos].get()]
+            self.item_var[pos].set(item_name)
  
-            item_price = self.prices_dict[self.itemno_var[self.i-1].get()]
-            self.price_var[self.i-1].set(item_price)
-        except:
+            item_price = self.prices_dict[self.itemno_var[pos].get()]
+            self.price_var[pos].set(item_price)
+        except Exception as e:
+            print(e)
             messagebox.showerror('Error!','Invalid item number.')
-            self.itemno_var[self.i-1].set(0)
+            self.itemno_var[pos].set(0)
  
     def fetch_cost(self,event):
         try:
-            if int(self.qty[self.i].get()) >= 0:
-                item_cost = float(self.price_var[self.i-1].get()) * int(self.qty[self.i].get())
-                self.cost_var[self.i-1].set(item_cost)
-                print('check')
+            s = str(event.widget)[14:]
+            pos = int(s)//6
+            print(pos)
+            if int(self.qty[pos].get()) >= 0:
+                item_cost = float(self.price_var[pos].get()) * int(self.qty[pos].get())
+                self.cost_var[pos].set(item_cost)
                 self.total_val.set(0)
                 for i in self.cost_var:
                     val = self.total_val.get()
@@ -139,7 +145,7 @@ class App():
 
             else:
                 messagebox.showerror('Error!','Invalid value for qty.')
-                self.qty_var[self.i-1].set(0)
+                self.qty_var[pos].set(0)
         except Exception as e:
             print(e)
             messagebox.showerror('Error!','Invalid value for qty.')
@@ -216,9 +222,12 @@ class App():
     def save(self,event=None):
         time = datetime.now()
         push_time = time.strftime('%Y-%m-%d %H:%M:%S')
- 
-        push_info = [int(self.itemno.get()), self.item.get(), int(self.qty.get()), float(self.price.get()), float(self.cost.get()),push_time]
-        self.purchase_data.append(push_info)
+
+        for j in range(self.i):
+            push_info = [int(self.itemno[j].get()), self.item[j].get(), int(self.qty[j].get()), 
+            float(self.price[j].get()), float(self.cost[j].get()),push_time]
+            if 0 not in push_info:
+                self.purchase_data.append(push_info)
  
         if self.purchase_data:
             with UseDatabase(self.dbconfig) as cur:
