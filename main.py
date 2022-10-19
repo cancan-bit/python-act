@@ -47,7 +47,7 @@ class App():
         self.prices_dict = dict()
 
         self.main_frame = Frame(self.root)
-        self.canvas = Canvas(self.main_frame,background = '#caffbf')
+        self.canvas = Canvas(self.main_frame,background = '#b2bdff')
         self.new_frame = Frame(self.canvas,background='#b2bdff')
         self.new_frame.grid(row=0,column=0, columnspan=2)
         self.main_frame.pack(fill='both',expand=1)
