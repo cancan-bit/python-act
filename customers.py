@@ -8,6 +8,8 @@ dbconfig = {'host':'localhost',
             'port': 3308
         }
 
+class AlreadyExistsException(Exception):
+    pass
 
 def create_acc(phone_no, cust):
     with UseDatabase(dbconfig) as cur:
@@ -17,10 +19,12 @@ def create_acc(phone_no, cust):
         if not data:
             sql = " insert into customer_info values({},'{}',{})".format(phone_no,cust,0)
             cur.execute(sql)
+        else:
+            raise AlreadyExistsException
 
 def fetch_info(phone_no):
     with UseDatabase(dbconfig) as cur:
-        sql = "select * from customer_info where phone_no = {}".format(phone_no)
+        sql = "select customer_name,points from customer_info where phone_no = {}".format(phone_no)
         cur.execute(sql)
         data = cur.fetchone()
         return data

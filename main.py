@@ -29,6 +29,7 @@ class App():
         self.cust_pno = IntVar()
         self.pts_avail = IntVar()
         self.pts_used = IntVar()
+        self.pts_used.set(0)
 
         self.purchase_hist = {}
 
@@ -124,12 +125,10 @@ class App():
 
             sql = '''create table if not exists customer_info(
                 phone_no int,
-                customer_no varchar(30),
+                customer_names varchar(30),
                 points int
             );
-            '''
-
-            
+            '''         
             cur.execute(sql)
  
         with UseDatabase(self.dbconfig) as cur:
@@ -159,7 +158,7 @@ class App():
         else:
             s = str(event.widget)[36:]
         print(event.widget)
-        pos = int(s)//6
+        pos = int(s)//6 - 1
         print(pos)
         try: 
             item_name = self.item_dict[self.itemno_var[pos].get()]
@@ -178,7 +177,7 @@ class App():
                 s = str(event.widget)[36+int(log(self.err,10)):]
             else:
                 s = str(event.widget)[36:]
-            pos = int(s)//6
+            pos = int(s)//10 
             print(pos)
             if int(self.qty[pos].get()) >= 0:
                 item_cost = float(self.price_var[pos].get()) * int(self.qty[pos].get())
@@ -189,7 +188,9 @@ class App():
                     dat = i.get()
 
                     self.total_val.set(val+dat)
-
+                f_total = int(self.total_val.get()) - int(self.pts_used.get())
+                self.final_total.set(f_total)
+                print(self.final_total.get())
             else:
                 messagebox.showerror('Error!','Invalid value for qty.')
                 self.qty_var[pos].set(0)
@@ -237,6 +238,8 @@ class App():
         self.pts_used_entry.destroy()
         self.pts_used_label.destroy()
         self.user_create.destroy()
+        self.final_total_label.destroy()
+        self.final_total_entry.destroy()
  
         self.button_create()
  
@@ -257,7 +260,7 @@ class App():
         self.disp_price.bind('<Button-1>',self.purchases)
         self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
  
-        self.total_label = Label(self.inputs,text='Total', font = 'Calibri 20',background = '#fdff86')
+        self.total_label = Label(self.inputs,text='Sub Total', font = 'Calibri 20',background = '#fdff86')
         self.total_label.grid(row=self.i+4,column=0,sticky='W')
         self.total = Entry(self.inputs,state='readonly',textvariable=self.total_val,font =('Calibri 20'))
         self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
@@ -268,34 +271,88 @@ class App():
         self.cust_pno_entry.grid(row=self.i+5,column=1,sticky='EW',columnspan=4)
         self.cust_pno_entry.bind('<Tab>',self.fetch_rec)
 
-        self.pts_avail_label = Label(self.inputs, text ='Points Available',font = 'Calibri 20', background='#fdff86')
-        self.pts_avail_label.grid(row=self.i+6,column=0,sticky='W')
-        self.pts_avail_entry = Entry(self.inputs,state='readonly',textvariable=self.pts_avail,font=('Calibri 20'))
-        self.pts_avail_entry.grid(row=self.i+6,column=1,sticky='EW',columnspan=4)
+        self.cust_name=StringVar()
+        self.cust_name_label = Label(self.inputs, text ='Points Available',font = 'Calibri 20', background='#fdff86')
+        self.cust_name_label.grid(row=self.i+6,column=0,sticky='W')
+        self.cust_name_entry = Entry(self.inputs,state='readonly',textvariable=self.cust_name,font=('Calibri 20'))
+        self.cust_name_entry.grid(row=self.i+6,column=1,sticky='EW',columnspan=4)
 
-        self.pts_used_label = Label(self.inputs, text ='Phone No.',font = 'Calibri 20', background='#fdff86')
-        self.pts_used_label.grid(row=self.i+7,column=0,sticky='W')
+        self.pts_avail_label = Label(self.inputs, text ='Points Available',font = 'Calibri 20', background='#fdff86')
+        self.pts_avail_label.grid(row=self.i+7,column=0,sticky='W')
+        self.pts_avail_entry = Entry(self.inputs,state='readonly',textvariable=self.pts_avail,font=('Calibri 20'))
+        self.pts_avail_entry.grid(row=self.i+7,column=1,sticky='EW',columnspan=4)
+
+        self.pts_used_label = Label(self.inputs, text ='Points Used',font = 'Calibri 20', background='#fdff86')
+        self.pts_used_label.grid(row=self.i+8,column=0,sticky='W')
         self.pts_used_entry = Entry(self.inputs,textvariable=self.pts_used,font=('Calibri 20'))
-        self.pts_used_entry.grid(row=self.i+7,column=1,sticky='EW',columnspan=4)
+        self.pts_used_entry.grid(row=self.i+8,column=1,sticky='EW',columnspan=4)
         self.pts_used_entry.bind('<Tab>',self.manage_rec)
 
-        self.end = Button(self.inputs,text='Quit', font =('Calibri 20'))
-        self.end.grid(row=self.i+9,column=2,pady=10)
-        self.end.bind('<Button-1>',self.quit)
+        self.final_total = DoubleVar()
+        self.final_total_label = Label(self.inputs, text='Total',font='Calibri 20',background='#fdff86')
+        self.final_total_label.grid(row=self.i+9,column=0,sticky='W')
+        self.final_total_entry = Entry(self.inputs,state='readonly',textvariable=self.final_total,font=("Calibri 20"))
+        self.final_total_entry.grid(row=self.i+9,column=1,sticky='ew',columnspan=4)
+        f_total = int(self.total_val.get()) - int(self.pts_used.get())*0.01
+        self.final_total.set(f_total)
+        print(self.final_total.get())
 
         self.user_create = Button(self.inputs, text='Create New User', font = ('Calibri 20'))
-        self.user_create.grid(row=self.i+8,column=2,pady=10)
+        self.user_create.grid(row=self.i+10,column=2,pady=10)
         self.user_create.bind('<Button-1>',self.new_user)
 
+        self.end = Button(self.inputs,text='Quit', font =('Calibri 20'))
+        self.end.grid(row=self.i+11,column=2,pady=10)
+        self.end.bind('<Button-1>',self.quit)
+
     def new_user(self,event=None):
-        pass
+        self.user_win= Toplevel(background='#b2bdff')
+        self.phone_info = IntVar()
+        self.name_info = StringVar()
+
+        Label(self.user_win,text='New User', background='#b2bdff',font='Calibri 20').grid(row=0,column=1,sticky='nsew',padx=10,pady=10)
+
+        Label(self.user_win,text='Phone No.',background='#b2bdff',font='Calibri 20').grid(row=1,column=0,sticky='w')
+        self.phone_info_entry = Entry(self.user_win,textvariable=self.phone_info,font = ('Calibri 20'))
+        self.phone_info_entry.grid(row=1,column=1,sticky='ew',padx=10,pady=10)
+
+        Label(self.user_win,text='Name',background='#b2bdff',font='Calibri 20').grid(row=2,column=0,sticky='w')
+        self.phone_info_entry = Entry(self.user_win,textvariable=self.name_info,font = ('Calibri 20'))
+        self.phone_info_entry.grid(row=2,column=1,sticky='ew',pady=10,padx=10)
+
+        self.push_db = Button(self.user_win,text = 'Create', font = ('Calibri 20'))
+        self.push_db.grid(row=3,column=2,sticky='EW')
+        self.push_db.bind('<Button-1>',self.push_data)
+
+    def push_data(self,event=None):
+        phone_no = self.phone_info.get()
+        name = self.name_info.get()
+        try:
+            create_acc(phone_no,name)
+            self.cust_dict[phone_no] = name
+        except AlreadyExistsException:
+            messagebox.showerror('Error!','Phone No. already exists')
+        self.user_win.destroy()
 
     def manage_rec(self,event=None):
-        pass
+        print(self.pts_used.get(),'Inside manage_rec')
+        if int(self.pts_used.get()) > 0:
+            if int(self.pts_used.get()) > int(self.pts_avail.get()):
+                messagebox.showerror('Error!','Not enough points')
+            else:
+                f_total = int(self.total_val.get()) - int(self.pts_used.get())
+                self.final_total.set(f_total)
+        else:
+            messagebox.showerror('Error!','Points must be positive')
 
     def fetch_rec(self,event=None):
-        pass
-
+        name,pts = fetch_info(self.cust_pno.get())
+        self.cust_name.set(name)
+        if pts != None:
+            self.pts_avail.set()
+        else:
+            messagebox.showinfo('Error!','Phone No. not registered. Create a new account')
+        
     def save(self,event=None):
         time = datetime.now()
         push_time = time.strftime('%Y-%m-%d %H:%M:%S')
