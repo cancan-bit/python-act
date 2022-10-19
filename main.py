@@ -107,7 +107,10 @@ class App():
                           (4,'Face cream',460),
                           (5,'Perfume',550),
                           (6,'Toothpaste',100),
-                          (7,'Hair Gel',230);
+                          (7,'Hair Gel',230),
+                          (8,'Notebook',50),
+                          (9,'Pen',20),
+                          (10,'Toothbrush',80);
                        '''
                 cur.execute(sql)
             except:
@@ -123,6 +126,7 @@ class App():
                         time datetime,
                         phone_no int,
                         c_name varchar(30),
+                        pts_use int,
                         foreign key (item_no) references shop_prices(item_no),
                         foreign key (phone_no) references customer_info(phone_no)
                         ) ;'''
@@ -351,7 +355,7 @@ class App():
                 f_total = int(self.total_val.get()) - int(self.pts_used.get())*0.01
                 self.final_total.set(f_total)
                 with UseDatabase(dbconfig) as cur:
-                    sql = "update customer_info set points = points - {} where phone_no= {}".format(int(self.pts.get()),int(self.cust_pno))
+                    sql = "update customer_info set points = points - {} where phone_no= {}".format(int(self.pts_used.get()),int(self.cust_pno))
                     cur.execute(sql)
         else:
             messagebox.showerror('Error!','Points must be positive')
@@ -388,7 +392,7 @@ class App():
                 for row in self.purchase_data:
                     if row[0] != 0 and row[6] != 0:
                         sql = ''' insert into shop_purchases values
-                            ({},{},'{}',{},{},{},'{}',{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
+                            ({},{},'{}',{},{},{},'{}',{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8])
                         cur.execute(sql)
                         sql = 'update customer_info set points = points + {} where phone_no = {}'.format(pts_to_add,row[6])
                         cur.execute(sql)
@@ -461,32 +465,45 @@ class App():
         run_tot = 0
         pno = 0
         c_name = ''
+        date = ''
+        point_used = 0
         for row in self.purchase_hist[self.c]:
             print(row)
             run_tot += int(row[-4])
+            date = row[-3]
             pno = row[-2]
             c_name = row[-1]
             self.tree.insert('',END,values=row)
 
         self.tree.grid(row=0,column=0,columnspan=2)
 
-        Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=0)
-        Label(w, text=str(run_tot),font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=1,sticky='EW')
+        
+        Label(w, text='Phone No', font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=0)
+        Label(w, text=str(pno),font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=1,sticky='EW')
 
-        Label(w, text='Phone No', font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=0)
-        Label(w, text=str(pno),font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=1,sticky='EW')
+        Label(w, text='Name', font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=0)
+        Label(w, text=str(c_name),font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=1,sticky='EW')
 
-        Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=0)
-        Label(w, text=str(c_name),font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=1,sticky='EW')
+        Label(w, text='Date', font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=0)
+        Label(w, text=date,font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=1,sticky='EW')
+
+        Label(w, text='Sub-total', font='Helvetica 26 bold',background='#b2bdff').grid(row=4,column=0)
+        Label(w, text=str(run_tot),font='Helvetica 26 bold',background='#b2bdff').grid(row=4,column=1,sticky='EW')
+
+        Label(w, text='Points Used', font='Helvetica 26 bold',background='#b2bdff').grid(row=5,column=0)
+        Label(w, text=str(point_used),font='Helvetica 26 bold',background='#b2bdff').grid(row=5,column=1,sticky='EW')
+
+        Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=6,column=0)
+        Label(w, text=str(run_tot + point_used*0.01),font='Helvetica 26 bold',background='#b2bdff').grid(row=6,column=1,sticky='EW')
 
 
         self.prev = Button(w, text='Previous',font=('Calibri 20'))
         self.prev.bind('<Button-1>', self.increment)
-        self.prev.grid(row=4,column=0)
+        self.prev.grid(row=7,column=0)
      
         self.next = Button(w, text='Next',font=('Calibri 20'))
         self.next.bind('<Button-1>', self.decrement)
-        self.next.grid(row=4,column=1)
+        self.next.grid(row=7,column=1)
 
 
     def increment(self, event=None):
