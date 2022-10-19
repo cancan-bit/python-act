@@ -26,6 +26,9 @@ class App():
         self.cost =[]
 
         self.total_val = DoubleVar()
+        self.cust_pno = IntVar()
+        self.pts_avail = IntVar()
+        self.pts_used = IntVar()
 
         self.purchase_hist = {}
 
@@ -45,6 +48,7 @@ class App():
         self.purchase_data = []
         self.item_dict = dict()
         self.prices_dict = dict()
+        self.cust_dict = dict()
 
         self.main_frame = Frame(self.root)
         self.canvas = Canvas(self.main_frame,background = '#b2bdff')
@@ -124,12 +128,20 @@ class App():
                 points int
             );
             '''
+
+            
             cur.execute(sql)
  
         with UseDatabase(self.dbconfig) as cur:
             sql = 'select * from {}'.format('shop_prices')
             cur.execute(sql)
             self.data = cur.fetchall()
+
+            sql = '''select phone_no,points from customer_info'''
+            cur.execute(sql)
+            inf = cur.fetchall()
+            for i in inf:
+                self.cust_dict[i[0]] = i[1]
  
         for i in self.data:
             self.item_dict[i[0]] = i[1]
@@ -218,6 +230,13 @@ class App():
         self.total_label.destroy()
         self.total.destroy()
         self.disp_price.destroy()
+        self.cust_pno_label.destroy()
+        self.cust_pno_entry.destroy()
+        self.pts_avail_entry.destroy()
+        self.pts_avail_label.destroy()
+        self.pts_used_entry.destroy()
+        self.pts_used_label.destroy()
+        self.user_create.destroy()
  
         self.button_create()
  
@@ -238,15 +257,45 @@ class App():
         self.disp_price.bind('<Button-1>',self.purchases)
         self.disp_price.grid(row=self.i+3, column=4, sticky='e',pady=10)
  
-        self.total_label = Label(self.inputs,text='Total', font = 'Calibri 20')
+        self.total_label = Label(self.inputs,text='Total', font = 'Calibri 20',background = '#fdff86')
         self.total_label.grid(row=self.i+4,column=0,sticky='W')
         self.total = Entry(self.inputs,state='readonly',textvariable=self.total_val,font =('Calibri 20'))
         self.total.grid(row=self.i+4,column=1,sticky='WE',columnspan=4)
- 
+
+        self.cust_pno_label = Label(self.inputs, text ='Phone No.',font = 'Calibri 20', background='#fdff86')
+        self.cust_pno_label.grid(row=self.i+5,column=0,sticky='W')
+        self.cust_pno_entry = Entry(self.inputs,textvariable=self.cust_pno,font=('Calibri 20'))
+        self.cust_pno_entry.grid(row=self.i+5,column=1,sticky='EW',columnspan=4)
+        self.cust_pno_entry.bind('<Tab>',self.fetch_rec)
+
+        self.pts_avail_label = Label(self.inputs, text ='Points Available',font = 'Calibri 20', background='#fdff86')
+        self.pts_avail_label.grid(row=self.i+6,column=0,sticky='W')
+        self.pts_avail_entry = Entry(self.inputs,state='readonly',textvariable=self.pts_avail,font=('Calibri 20'))
+        self.pts_avail_entry.grid(row=self.i+6,column=1,sticky='EW',columnspan=4)
+
+        self.pts_used_label = Label(self.inputs, text ='Phone No.',font = 'Calibri 20', background='#fdff86')
+        self.pts_used_label.grid(row=self.i+7,column=0,sticky='W')
+        self.pts_used_entry = Entry(self.inputs,textvariable=self.pts_used,font=('Calibri 20'))
+        self.pts_used_entry.grid(row=self.i+7,column=1,sticky='EW',columnspan=4)
+        self.pts_used_entry.bind('<Tab>',self.manage_rec)
+
         self.end = Button(self.inputs,text='Quit', font =('Calibri 20'))
-        self.end.grid(row=self.i+5,column=2,pady=10)
+        self.end.grid(row=self.i+9,column=2,pady=10)
         self.end.bind('<Button-1>',self.quit)
- 
+
+        self.user_create = Button(self.inputs, text='Create New User', font = ('Calibri 20'))
+        self.user_create.grid(row=self.i+8,column=2,pady=10)
+        self.user_create.bind('<Button-1>',self.new_user)
+
+    def new_user(self,event=None):
+        pass
+
+    def manage_rec(self,event=None):
+        pass
+
+    def fetch_rec(self,event=None):
+        pass
+
     def save(self,event=None):
         time = datetime.now()
         push_time = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -341,7 +390,7 @@ class App():
         self.tree.grid(row=0,column=0,columnspan=2)
 
         Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=0)
-        Label(w, text=str(run_tot),font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=1)
+        Label(w, text=str(run_tot),font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=1,sticky='EW')
 
         self.prev = Button(w, text='Previous',font=('Calibri 20'))
         self.prev.bind('<Button-1>', self.increment)
