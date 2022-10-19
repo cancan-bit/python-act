@@ -376,8 +376,8 @@ class App():
         pts_to_add = float(self.final_total.get())*0.1
 
         for j in range(self.i):
-            push_info = [int(self.itemno[j].get()), self.item[j].get(), int(self.qty[j].get()), 
-            float(self.price[j].get()), float(self.cost[j].get()),push_time,int(self.cust_pno.get()),self.cust_name.get()]
+            push_info = [int(self.itemno[j].get()), self.item[j].get(), int(self.qty[j].get()),
+            float(self.price[j].get()), float(self.cost[j].get()),push_time,int(self.cust_pno.get()),self.cust_name.get(),int(self.pts_used.get())]
             if 0 not in push_info:
                 self.purchase_data.append(push_info)
 
@@ -392,7 +392,7 @@ class App():
                 for row in self.purchase_data:
                     if row[0] != 0 and row[6] != 0:
                         sql = ''' insert into shop_purchases values
-                            ({},{},'{}',{},{},{},'{}',{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8])
+                            ({},{},'{}',{},{},{},'{}',{},'{}',{})'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8])
                         cur.execute(sql)
                         sql = 'update customer_info set points = points + {} where phone_no = {}'.format(pts_to_add,row[6])
                         cur.execute(sql)
@@ -469,10 +469,11 @@ class App():
         point_used = 0
         for row in self.purchase_hist[self.c]:
             print(row)
-            run_tot += int(row[-4])
-            date = row[-3]
-            pno = row[-2]
-            c_name = row[-1]
+            run_tot += int(row[-5])
+            date = row[-4]
+            pno = row[-3]
+            c_name = row[-2]
+            point_used=row[-1]
             self.tree.insert('',END,values=row)
 
         self.tree.grid(row=0,column=0,columnspan=2)
@@ -494,7 +495,7 @@ class App():
         Label(w, text=str(point_used),font='Helvetica 26 bold',background='#b2bdff').grid(row=5,column=1,sticky='EW')
 
         Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=6,column=0)
-        Label(w, text=str(run_tot + point_used*0.01),font='Helvetica 26 bold',background='#b2bdff').grid(row=6,column=1,sticky='EW')
+        Label(w, text=str(run_tot - point_used*0.01),font='Helvetica 26 bold',background='#b2bdff').grid(row=6,column=1,sticky='EW')
 
 
         self.prev = Button(w, text='Previous',font=('Calibri 20'))
