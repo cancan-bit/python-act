@@ -119,13 +119,17 @@ class App():
                         qty int,
                         price float(10,2),
                         cost float(10,2),
-                        time datetime
-                        ) '''
+                        time datetime,
+                        phone_no int,
+                        c_name varchar(30),
+                        foreign key (item_no) references shop_prices(item_no),
+                        foreign key (phone_no) references customer_info(phone_no)
+                        ) ;'''
             cur.execute(sql)
 
             sql = '''create table if not exists customer_info(
-                phone_no int,
-                customer_names varchar(30),
+                phone_no int primary key,
+                customer_name varchar(30),
                 points int
             );
             '''         
@@ -154,11 +158,11 @@ class App():
  
     def fetch_item(self,event):
         if self.err != 0:
-                s = str(event.widget)[36+int(log(self.err,10)):]
+                s = str(event.widget)[37+int(log(self.err,10)):]
         else:
             s = str(event.widget)[36:]
         print(event.widget)
-        pos = int(s)//6 - 1
+        pos = int(s)//11 
         print(pos)
         try: 
             item_name = self.item_dict[self.itemno_var[pos].get()]
@@ -177,7 +181,7 @@ class App():
                 s = str(event.widget)[36+int(log(self.err,10)):]
             else:
                 s = str(event.widget)[36:]
-            pos = int(s)//10 
+            pos = int(s)//11 
             print(pos)
             if int(self.qty[pos].get()) >= 0:
                 item_cost = float(self.price_var[pos].get()) * int(self.qty[pos].get())
@@ -240,6 +244,8 @@ class App():
         self.user_create.destroy()
         self.final_total_label.destroy()
         self.final_total_entry.destroy()
+        self.cust_name_entry.destroy()
+        self.cust_name_label.destroy()
  
         self.button_create()
  
@@ -272,7 +278,7 @@ class App():
         self.cust_pno_entry.bind('<Tab>',self.fetch_rec)
 
         self.cust_name=StringVar()
-        self.cust_name_label = Label(self.inputs, text ='Points Available',font = 'Calibri 20', background='#fdff86')
+        self.cust_name_label = Label(self.inputs, text ='Name',font = 'Calibri 20', background='#fdff86')
         self.cust_name_label.grid(row=self.i+6,column=0,sticky='W')
         self.cust_name_entry = Entry(self.inputs,state='readonly',textvariable=self.cust_name,font=('Calibri 20'))
         self.cust_name_entry.grid(row=self.i+6,column=1,sticky='EW',columnspan=4)
@@ -328,8 +334,9 @@ class App():
         phone_no = self.phone_info.get()
         name = self.name_info.get()
         try:
-            create_acc(phone_no,name)
-            self.cust_dict[phone_no] = name
+            if not phone_no and not name:
+                create_acc(phone_no,name)
+                self.cust_dict[phone_no] = name
         except AlreadyExistsException:
             messagebox.showerror('Error!','Phone No. already exists')
         self.user_win.destroy()
@@ -348,8 +355,9 @@ class App():
     def fetch_rec(self,event=None):
         name,pts = fetch_info(self.cust_pno.get())
         self.cust_name.set(name)
+        print(self.cust_name.get())
         if pts != None:
-            self.pts_avail.set()
+            self.pts_avail.set(pts)
         else:
             messagebox.showinfo('Error!','Phone No. not registered. Create a new account')
         
@@ -357,12 +365,14 @@ class App():
         time = datetime.now()
         push_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
+        pts_to_add = float(self.final_total.get())*0.1
+
         for j in range(self.i):
             push_info = [int(self.itemno[j].get()), self.item[j].get(), int(self.qty[j].get()), 
-            float(self.price[j].get()), float(self.cost[j].get()),push_time]
+            float(self.price[j].get()), float(self.cost[j].get()),push_time,int(self.cust_pno.get()),self.cust_name.get()]
             if 0 not in push_info:
                 self.purchase_data.append(push_info)
- 
+
         if self.purchase_data:
             with UseDatabase(self.dbconfig) as cur:
                 cur.execute('select max(bill_no) from shop_purchases;')
@@ -372,15 +382,21 @@ class App():
                 else:
                     bill_no = 1
                 for row in self.purchase_data:
-                    if row[0] != 0:
+                    if row[0] != 0 and row[6] != 0:
                         sql = ''' insert into shop_purchases values
-                            ({},{},'{}',{},{},{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5])
+                            ({},{},'{}',{},{},{},'{}',{},'{}')'''.format(bill_no,row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
                         cur.execute(sql)
+                        sql = 'update customer_info set points = points + {} where phone_no = {}'.format(pts_to_add,row[6])
+                        cur.execute(sql)
+                    elif row[6] != 0:
+                        messagebox.showerror('Error!','Create new user')
+
             self.purchase_data = list()
             self.main_frame.destroy()
             self.err += 1
             self.__init__(self.root)
         else:
+            print(self.purchase_data)
             messagebox.showwarning('Null value','Please enter some values')
  
     def display(self):
@@ -440,8 +456,13 @@ class App():
         self.tree.heading('cost',text='Cost')
 
         run_tot = 0
+        pno = 123
+        c_name = 'Placeholder'
         for row in self.purchase_hist[self.c]:
-            run_tot += int(row[-2])
+            print(row)
+            run_tot += int(row[-4])
+            pno = row[-2]
+            c_name = row[-1]
             self.tree.insert('',END,values=row)
 
         self.tree.grid(row=0,column=0,columnspan=2)
@@ -449,13 +470,20 @@ class App():
         Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=0)
         Label(w, text=str(run_tot),font='Helvetica 26 bold',background='#b2bdff').grid(row=1,column=1,sticky='EW')
 
+        Label(w, text='Phone No', font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=0)
+        Label(w, text=str(pno),font='Helvetica 26 bold',background='#b2bdff').grid(row=2,column=1,sticky='EW')
+
+        Label(w, text='Total', font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=0)
+        Label(w, text=str(c_name),font='Helvetica 26 bold',background='#b2bdff').grid(row=3,column=1,sticky='EW')
+
+
         self.prev = Button(w, text='Previous',font=('Calibri 20'))
         self.prev.bind('<Button-1>', self.increment)
-        self.prev.grid(row=2,column=0)
+        self.prev.grid(row=4,column=0)
      
         self.next = Button(w, text='Next',font=('Calibri 20'))
         self.next.bind('<Button-1>', self.decrement)
-        self.next.grid(row=2,column=1)
+        self.next.grid(row=4,column=1)
 
 
     def increment(self, event=None):
