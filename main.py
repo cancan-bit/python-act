@@ -5,7 +5,7 @@ import mysql.connector as s
 from dbcm import UseDatabase
 from datetime import datetime
 from customers import *
-from math import log 
+import re
  
 root = Tk()
  
@@ -29,6 +29,8 @@ class App():
         self.cust_pno = IntVar()
         self.pts_avail = IntVar()
         self.pts_used = IntVar()
+        self.cust_name=StringVar()
+        self.final_total = DoubleVar()
         self.pts_used.set(0)
 
         self.purchase_hist = {}
@@ -41,10 +43,9 @@ class App():
         }
 
         self.root = root
-        self.i = 0
+        self.i = 0     #Row tracker
         self.data = []
-        self.c=1
-        self.err = 0
+        self.c=1  #Purchase history tracker
  
         self.purchase_data = []
         self.item_dict = dict()
@@ -157,10 +158,10 @@ class App():
         self.row_create()
  
     def fetch_item(self,event):
-        if self.err != 0:
-                s = str(event.widget)[37+int(log(self.err,10)):]
-        else:
-            s = str(event.widget)[36:]
+        s = str(event.widget)  
+        x = re.findall('\d',s[:15])
+        err = len(x)   #-1 for excluding the last number
+        s = str(event.widget)[36+err:]
         print(event.widget)
         pos = int(s)//11 
         print(pos)
@@ -177,10 +178,10 @@ class App():
  
     def fetch_cost(self,event):
         try:
-            if self.err != 0:
-                s = str(event.widget)[36+int(log(self.err,10)):]
-            else:
-                s = str(event.widget)[36:]
+            s = str(event.widget)  
+            x = re.findall('\d',s[:15])
+            err = len(x)   #-1 for excluding the last number
+            s = str(event.widget)[36+err:]
             pos = int(s)//11 
             print(pos)
             if int(self.qty[pos].get()) >= 0:
@@ -277,7 +278,6 @@ class App():
         self.cust_pno_entry.grid(row=self.i+5,column=1,sticky='EW',columnspan=4)
         self.cust_pno_entry.bind('<Tab>',self.fetch_rec)
 
-        self.cust_name=StringVar()
         self.cust_name_label = Label(self.inputs, text ='Name',font = 'Calibri 20', background='#fdff86')
         self.cust_name_label.grid(row=self.i+6,column=0,sticky='W')
         self.cust_name_entry = Entry(self.inputs,state='readonly',textvariable=self.cust_name,font=('Calibri 20'))
@@ -294,12 +294,11 @@ class App():
         self.pts_used_entry.grid(row=self.i+8,column=1,sticky='EW',columnspan=4)
         self.pts_used_entry.bind('<Tab>',self.manage_rec)
 
-        self.final_total = DoubleVar()
         self.final_total_label = Label(self.inputs, text='Total',font='Calibri 20',background='#fdff86')
         self.final_total_label.grid(row=self.i+9,column=0,sticky='W')
         self.final_total_entry = Entry(self.inputs,state='readonly',textvariable=self.final_total,font=("Calibri 20"))
         self.final_total_entry.grid(row=self.i+9,column=1,sticky='ew',columnspan=4)
-        f_total = int(self.total_val.get()) - int(self.pts_used.get())*0.01
+        f_total = float(self.total_val.get()) - (float(self.pts_used.get())*0.01)
         self.final_total.set(f_total)
         print(self.final_total.get())
 
@@ -323,18 +322,20 @@ class App():
         self.phone_info_entry.grid(row=1,column=1,sticky='ew',padx=10,pady=10)
 
         Label(self.user_win,text='Name',background='#b2bdff',font='Calibri 20').grid(row=2,column=0,sticky='w')
-        self.phone_info_entry = Entry(self.user_win,textvariable=self.name_info,font = ('Calibri 20'))
-        self.phone_info_entry.grid(row=2,column=1,sticky='ew',pady=10,padx=10)
+        self.cust_name_entry = Entry(self.user_win,textvariable=self.name_info,font = ('Calibri 20'))
+        self.cust_name_entry.grid(row=2,column=1,sticky='ew',pady=10,padx=10)
 
         self.push_db = Button(self.user_win,text = 'Create', font = ('Calibri 20'))
-        self.push_db.grid(row=3,column=2,sticky='EW')
+        self.push_db.grid(row=3,column=2,sticky='EW',padx=20,pady=20)
         self.push_db.bind('<Button-1>',self.push_data)
 
     def push_data(self,event=None):
         phone_no = self.phone_info.get()
         name = self.name_info.get()
+        print(phone_no,name)
         try:
-            if not phone_no and not name:
+            if phone_no and name:
+                print('In here')
                 create_acc(phone_no,name)
                 self.cust_dict[phone_no] = name
         except AlreadyExistsException:
@@ -347,20 +348,23 @@ class App():
             if int(self.pts_used.get()) > int(self.pts_avail.get()):
                 messagebox.showerror('Error!','Not enough points')
             else:
-                f_total = int(self.total_val.get()) - int(self.pts_used.get())
+                f_total = int(self.total_val.get()) - int(self.pts_used.get())*0.01
                 self.final_total.set(f_total)
+                with UseDatabase(dbconfig) as cur:
+                    sql = "update customer_info set points = points - {} where phone_no= {}".format(int(self.pts.get()),int(self.cust_pno))
+                    cur.execute(sql)
         else:
             messagebox.showerror('Error!','Points must be positive')
 
     def fetch_rec(self,event=None):
-        name,pts = fetch_info(self.cust_pno.get())
-        self.cust_name.set(name)
-        print(self.cust_name.get())
-        if pts != None:
-            self.pts_avail.set(pts)
-        else:
-            messagebox.showinfo('Error!','Phone No. not registered. Create a new account')
-        
+        try:
+            name,pts = fetch_info(self.cust_pno.get())
+            self.cust_name.set(name)
+            print(self.cust_name.get())
+            self.pts_avail.set(pts)      
+        except:
+            messagebox.showinfo('Error!','Phone No. not registered. Create a new account')    
+
     def save(self,event=None):
         time = datetime.now()
         push_time = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -388,16 +392,15 @@ class App():
                         cur.execute(sql)
                         sql = 'update customer_info set points = points + {} where phone_no = {}'.format(pts_to_add,row[6])
                         cur.execute(sql)
-                    elif row[6] != 0:
-                        messagebox.showerror('Error!','Create new user')
 
             self.purchase_data = list()
             self.main_frame.destroy()
-            self.err += 1
             self.__init__(self.root)
-        else:
+        elif not self.cust_pno.get():
             print(self.purchase_data)
-            messagebox.showwarning('Null value','Please enter some values')
+            messagebox.showwarning('Error!','Create new user')
+        else:
+            messagebox.showwarning('Error!','Please fill the empty values')
  
     def display(self):
 
@@ -456,8 +459,8 @@ class App():
         self.tree.heading('cost',text='Cost')
 
         run_tot = 0
-        pno = 123
-        c_name = 'Placeholder'
+        pno = 0
+        c_name = ''
         for row in self.purchase_hist[self.c]:
             print(row)
             run_tot += int(row[-4])
